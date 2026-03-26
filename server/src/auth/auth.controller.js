@@ -11,7 +11,7 @@ const prisma = require("../../config/db");
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
-    { id: user.id, email: user.email, createdAt: user.createdAt , refreshToken: user.refreshToken },
+    { id: user.id, email: user.email, createdAt: user.createdAt , refreshToken: user.refreshToken, name: user.name, role: user.role , updatedAt: user.updatedAt },
     process.env.JWT_SECRET,
     { expiresIn: "15m" },
   );
@@ -39,12 +39,20 @@ const generateTokens = (user) => {
  *             type: object
  *             required: [email, password]
  *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
  *               email:
  *                 type: string
  *                 example: user@example.com
  *               password:
  *                 type: string
  *                 example: password123
+ *               role:
+ *                 type: enum
+ *                 enum: [USER, ADMIN]
+ *                 example: USER
+ *                 default: USER
  *     responses:
  *       201:
  *         description: User created
@@ -56,11 +64,14 @@ const generateTokens = (user) => {
  *         description: Registration failed
  */
 const register = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password , name, role } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
+
+  const allowedRoles = ["ADMIN", "USER"];
+  const assignedRole = allowedRoles.includes(role) ? role : "USER";
 
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -72,7 +83,7 @@ const register = async (req, res) => {
   try {
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed },
+      data: { email, password: hashed, name, role: assignedRole },
     });
     res.status(201).json({ message: "User created", userId: user.id });
   } catch (error) {
@@ -163,7 +174,7 @@ const me = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     res.json({
-      user: { id: user.id, email: user.email, createdAt: user.createdAt },
+      user: { id: user.id, email: user.email, createdAt: user.createdAt , name: user.name, role: user.role , updatedAt: user.updatedAt },
     });
   } catch (error) {
     console.error("Fetch user error:", error);
