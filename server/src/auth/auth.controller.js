@@ -239,20 +239,31 @@ const refresh = async (req, res) => {
     where: { id: payload.id },
   });
 
-  if (!user || user.tokenVersion !== payload.tokenVersion) {
+  if (!user) {
     return res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
+  const rotationResult = await prisma.user.updateMany({
+    where: {
+      id: payload.id,
+      tokenVersion: payload.tokenVersion,
+    },
     data: {
       tokenVersion: { increment: 1 },
     },
   });
 
   const updatedUser = await prisma.user.findUnique({
-    where: { id: user.id },
+    where: { id: payload.id },
   });
+
+  if (
+    !updatedUser ||
+    (rotationResult.count === 0 &&
+      updatedUser.tokenVersion !== payload.tokenVersion + 1)
+  ) {
+    return res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
 
   const newRefreshToken = generateRefreshToken(updatedUser);
 
