@@ -1,13 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
 
 import { AuthShell, InputField } from "@/components/auth/AuthShell";
 import { useLogin } from "@/hooks/useAuth";
 
-
-export default function LoginPage() {
+const LoginPage = () => {
   const router = useRouter();
 
   const { mutate, isPending, isError, error } = useLogin();
@@ -26,18 +25,22 @@ export default function LoginPage() {
 
     mutate(form, {
       onSuccess: (res) => {
+        console.log("Login response:", res); // Debugging log
         // 🔐 store token (adjust based on your API response)
-        const token = res?.data?.token;
+        const accessToken = res?.data?.accessToken;
 
-        if (token) {
-          localStorage.setItem("token", token);
+        if (accessToken) {
+          localStorage.setItem("accessToken", accessToken);
         }
         toast.success("Login successful!");
-        router.push("/"); // change redirect to dashboard
+        router.push("/"); 
       },
       onError: (err: any) => {
-        toast.error(err.response?.data || "Login failed. Please check your credentials and try again.");
-      }
+        toast.error(
+          err.response?.data ||
+            "Login failed. Please check your credentials and try again.",
+        );
+      },
     });
   };
 
@@ -52,6 +55,7 @@ export default function LoginPage() {
       <form id="auth-form" className="space-y-4" onSubmit={handleSubmit}>
         <InputField
           id="email"
+          name="email"
           label="Email address"
           type="email"
           placeholder="you@example.com"
@@ -60,6 +64,7 @@ export default function LoginPage() {
 
         <InputField
           id="password"
+          name="password"
           label="Password"
           type="password"
           placeholder="Enter your password"
@@ -68,4 +73,6 @@ export default function LoginPage() {
       </form>
     </AuthShell>
   );
-}
+};
+
+export default LoginPage;

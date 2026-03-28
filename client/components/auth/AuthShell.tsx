@@ -22,9 +22,6 @@ export function AuthShell({
     <main className="auth-bg flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
       <section className="w-full max-w-md rounded-3xl border border-white/50 bg-white/85 p-6 shadow-2xl backdrop-blur-md sm:p-8">
         <header className="space-y-2 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">
-            Task Management App
-          </p>
           <h1 className="text-3xl font-bold text-slate-900">{title}</h1>
           <p className="text-sm text-slate-600">{subtitle}</p>
         </header>
@@ -53,12 +50,14 @@ export function AuthShell({
 export function InputField({
   label,
   id,
+  name,
   type = "text",
   placeholder,
   onChange,
 }: Readonly<{
   label: string;
   id: string;
+  name: string;
   type?: string;
   placeholder?: string;
   onChange?: (e: any) => void;
@@ -68,7 +67,7 @@ export function InputField({
       <span className="text-sm font-medium text-slate-700">{label}</span>
       <input
         id={id}
-        name={id}
+        name={name}
         type={type}
         placeholder={placeholder}
         onChange={onChange}
