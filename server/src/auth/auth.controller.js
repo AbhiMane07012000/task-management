@@ -223,11 +223,12 @@ const me = async (req, res) => {
 const refresh = async (req, res) => {
   const token = req.cookies.jid;
 
-  if (!token) return res.status(401).json({ message: "No refresh token provided" });
+  if (!token) {
+    return res.status(401).json({ message: "No refresh token provided" });
+  }
 
   let payload;
 
-  
   try {
     payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
   } catch {
@@ -242,8 +243,18 @@ const refresh = async (req, res) => {
     return res.status(403).json({ message: "Invalid or expired refresh token" });
   }
 
-  // 🔥 rotate token
-  const newRefreshToken = generateRefreshToken(user);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      tokenVersion: { increment: 1 },
+    },
+  });
+
+  const updatedUser = await prisma.user.findUnique({
+    where: { id: user.id },
+  });
+
+  const newRefreshToken = generateRefreshToken(updatedUser);
 
   res.cookie("jid", newRefreshToken, {
     httpOnly: true,
@@ -252,7 +263,7 @@ const refresh = async (req, res) => {
     path: "/api/auth/refresh",
   });
 
-  const accessToken = generateAccessToken(user);
+  const accessToken = generateAccessToken(updatedUser);
 
   return res.json({ accessToken });
 };

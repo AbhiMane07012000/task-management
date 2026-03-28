@@ -16,11 +16,15 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  res => res,
+  (res) => res,
   async (err) => {
     const originalRequest = err.config;
 
-    if (err.response?.status === 401 && !originalRequest._retry) {
+    if (
+      err.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/refresh")
+    ) {
       originalRequest._retry = true;
 
       try {
@@ -30,7 +34,7 @@ api.interceptors.response.use(
 
         localStorage.setItem("accessToken", newAccessToken);
 
-        api.defaults.headers.Authorization = `Bearer ${newAccessToken}`; 
+        api.defaults.headers.Authorization = `Bearer ${newAccessToken}`;
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
@@ -43,5 +47,5 @@ api.interceptors.response.use(
     }
 
     throw err;
-  }
+  },
 );
